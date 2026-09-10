@@ -1,4 +1,4 @@
-import { Controller, Get, Param } from '@nestjs/common';
+import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
 
 interface User {
   id: string;
@@ -72,7 +72,7 @@ export class UsersController {
     console.log('.:: UserID:', id);
     const data = this.users.find((user) => user.id === id);
     console.log('.:: data: ', data);
-    if(data === undefined) {
+    if (data === undefined) {
       return {
         msg: 'No existe el ID',
         data
@@ -87,7 +87,7 @@ export class UsersController {
   @Get('search/:name')
   getUserByName(@Param('name') name: string) {
     const data = this.users.find((user) => user.name === name);
-    if(!data) {
+    if (!data) {
       return {
         msg: 'Nombre no encontrado'
       }
@@ -95,6 +95,65 @@ export class UsersController {
     return {
       data: data?.email
     };
+  }
+
+  @Post()
+  createUser(@Body() userPayload: User) {
+    console.log('.:: user: ', userPayload);
+    const data = this.users.find((user) => user.id === userPayload.id || user.email === userPayload.email);
+    if (data) {
+      return {
+        msg: 'El usuario ya se encuentra registrado'
+      }
+    }
+    this.users.push(userPayload);
+
+    return {
+      msg: "Usuario creado con éxito",
+      data: userPayload
+    }
+  }
+
+  @Delete(':id')
+  deleteUser(@Param('id') id: string) {
+    console.log('.:: UserID:', id);
+    const position = this.users.findIndex((user) => user.id === id);
+    console.log('.:: position: ', position);
+    if (position === -1) {
+      return {
+        msg: 'No existe el ID'
+      }
+    }
+
+    this.users.splice(position, 1);
+
+    return {
+      msg: "Usuario eliminado con éxito"
+    }
+  }
+
+  @Put(':id')
+  updateUser(@Param('id') id: string, @Body() userChanges: User) {
+    console.log('.:: UserID Update:', id);
+    console.log('.:: userChanges: ', userChanges);
+
+    const position = this.users.findIndex((user) => user.id === id);
+    if (position === -1) {
+      return {
+        msg: 'No existe el ID'
+      }
+    }
+
+    const existingUser = this.users[position];
+    console.log('.:: existingUser: ', existingUser);
+
+    const updatedUser = { ...existingUser, ...userChanges };
+    this.users[position] = updatedUser;
+
+    return {
+      msg: "Usuario actualizado con éxito",
+      data: updatedUser
+    }
   }
 
 }
