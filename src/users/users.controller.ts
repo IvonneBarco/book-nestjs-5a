@@ -1,4 +1,4 @@
-import { Body, Controller, Delete, Get, Param, Post, Put } from '@nestjs/common';
+import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
 
 interface User {
   id: string;
@@ -8,59 +8,58 @@ interface User {
 
 @Controller('users')
 export class UsersController {
-
   private users: User[] = [
     {
-      "id": "1",
-      "name": "Maria",
-      "email": "maria@correo.com"
+      id: '1',
+      name: 'Maria',
+      email: 'maria@correo.com',
     },
     {
-      "id": "2",
-      "name": "Carlos",
-      "email": "carlos@correo.com"
+      id: '2',
+      name: 'Carlos',
+      email: 'carlos@correo.com',
     },
     {
-      "id": "3",
-      "name": "Ana",
-      "email": "ana@correo.com"
+      id: '3',
+      name: 'Ana',
+      email: 'ana@correo.com',
     },
     {
-      "id": "4",
-      "name": "Luis",
-      "email": "luis@correo.com"
+      id: '4',
+      name: 'Luis',
+      email: 'luis@correo.com',
     },
     {
-      "id": "5",
-      "name": "Sofia",
-      "email": "sofia@correo.com"
+      id: '5',
+      name: 'Sofia',
+      email: 'sofia@correo.com',
     },
     {
-      "id": "6",
-      "name": "Mateo",
-      "email": "mateo@correo.com"
+      id: '6',
+      name: 'Mateo',
+      email: 'mateo@correo.com',
     },
     {
-      "id": "7",
-      "name": "Lucia",
-      "email": "lucia@correo.com"
+      id: '7',
+      name: 'Lucia',
+      email: 'lucia@correo.com',
     },
     {
-      "id": "8",
-      "name": "Diego",
-      "email": "diego@correo.com"
+      id: '8',
+      name: 'Diego',
+      email: 'diego@correo.com',
     },
     {
-      "id": "9",
-      "name": "Elena",
-      "email": "elena@correo.com"
+      id: '9',
+      name: 'Elena',
+      email: 'elena@correo.com',
     },
     {
-      "id": "10",
-      "name": "Javier",
-      "email": "javier@correo.com"
-    }
-  ]
+      id: '10',
+      name: 'Javier',
+      email: 'javier@correo.com',
+    },
+  ];
 
   @Get('')
   getUsers() {
@@ -73,14 +72,18 @@ export class UsersController {
     const data = this.users.find((user) => user.id === id);
     console.log('.:: data: ', data);
     if (data === undefined) {
-      return {
-        msg: 'No existe el ID',
-        data
-      }
+      // Código para simular un error de usuario no encontrado
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
+
+    // Código para simular un error de permisos
+    if(data.id === '1') {
+      throw new ForbiddenException(`Usuario con ID ${id} no tiene permisos para acceder a este recurso`);
+    }
+
     return {
       msg: 'Usuario encontrado',
-      data
+      data,
     };
   }
 
@@ -88,12 +91,10 @@ export class UsersController {
   getUserByName(@Param('name') name: string) {
     const data = this.users.find((user) => user.name === name);
     if (!data) {
-      return {
-        msg: 'Nombre no encontrado'
-      }
+      throw new NotFoundException(`Usuario con nombre ${name} no encontrado`);
     }
     return {
-      data: data?.email
+      data: data?.email,
     };
   }
 
@@ -103,15 +104,20 @@ export class UsersController {
     const data = this.users.find((user) => user.id === userPayload.id || user.email === userPayload.email);
     if (data) {
       return {
-        msg: 'El usuario ya se encuentra registrado'
-      }
+        msg: 'El usuario ya se encuentra registrado',
+      };
     }
+
+    if(!userPayload.email) {
+      throw new BadRequestException('El correo electrónico es obligatorio para crear un usuario');
+    }
+
     this.users.push(userPayload);
 
     return {
-      msg: "Usuario creado con éxito",
-      data: userPayload
-    }
+      msg: 'Usuario creado con éxito',
+      data: userPayload,
+    };
   }
 
   @Delete(':id')
@@ -120,16 +126,14 @@ export class UsersController {
     const position = this.users.findIndex((user) => user.id === id);
     console.log('.:: position: ', position);
     if (position === -1) {
-      return {
-        msg: 'No existe el ID'
-      }
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
     this.users.splice(position, 1);
 
     return {
-      msg: "Usuario eliminado con éxito"
-    }
+      msg: 'Usuario eliminado con éxito',
+    };
   }
 
   @Put(':id')
@@ -139,21 +143,24 @@ export class UsersController {
 
     const position = this.users.findIndex((user) => user.id === id);
     if (position === -1) {
-      return {
-        msg: 'No existe el ID'
-      }
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
     const existingUser = this.users[position];
     console.log('.:: existingUser: ', existingUser);
 
+    // Evaluar si el correo tiene el formato válido antes de actualizarlo
+    const email = userChanges.email;
+    if(email && !email.includes('@')) {
+      throw new UnprocessableEntityException(`El correo electrónico ${email} no tiene un formato válido`);
+    }
+
     const updatedUser = { ...existingUser, ...userChanges };
     this.users[position] = updatedUser;
 
     return {
-      msg: "Usuario actualizado con éxito",
-      data: updatedUser
-    }
+      msg: 'Usuario actualizado con éxito',
+      data: updatedUser,
+    };
   }
-
 }
