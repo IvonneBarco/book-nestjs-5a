@@ -1,4 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
+import { CreateUserDto } from './user.dto';
 
 interface User {
   id: string;
@@ -77,7 +78,7 @@ export class UsersController {
     }
 
     // Código para simular un error de permisos
-    if(data.id === '1') {
+    if (data.id === '1') {
       throw new ForbiddenException(`Usuario con ID ${id} no tiene permisos para acceder a este recurso`);
     }
 
@@ -99,24 +100,15 @@ export class UsersController {
   }
 
   @Post()
-  createUser(@Body() userPayload: User) {
-    console.log('.:: user: ', userPayload);
-    const data = this.users.find((user) => user.id === userPayload.id || user.email === userPayload.email);
-    if (data) {
-      return {
-        msg: 'El usuario ya se encuentra registrado',
-      };
-    }
-
-    if(!userPayload.email) {
-      throw new BadRequestException('El correo electrónico es obligatorio para crear un usuario');
-    }
-
-    this.users.push(userPayload);
+  createUser(@Body() userPayload: CreateUserDto) {
+    const newUser = {
+      ...userPayload,
+      id: `${new Date().getTime()}`,
+    };
+    this.users.push(newUser);
 
     return {
-      msg: 'Usuario creado con éxito',
-      data: userPayload,
+      data: newUser,
     };
   }
 
@@ -151,7 +143,7 @@ export class UsersController {
 
     // Evaluar si el correo tiene el formato válido antes de actualizarlo
     const email = userChanges.email;
-    if(email && !email.includes('@')) {
+    if (email && !email.includes('@')) {
       throw new UnprocessableEntityException(`El correo electrónico ${email} no tiene un formato válido`);
     }
 
