@@ -1,5 +1,5 @@
 import { BadRequestException, Body, Controller, Delete, ForbiddenException, Get, NotFoundException, Param, Post, Put, UnprocessableEntityException } from '@nestjs/common';
-import { CreateUserDto } from './user.dto';
+import { CreateUserDto, UpdateUserDto } from './user.dto';
 
 interface User {
   id: string;
@@ -104,6 +104,7 @@ export class UsersController {
     const newUser = {
       ...userPayload,
       id: `${new Date().getTime()}`,
+      nickname: userPayload.name.substring(0, 3) + Math.floor(Math.random() * 1000)
     };
     this.users.push(newUser);
 
@@ -129,7 +130,7 @@ export class UsersController {
   }
 
   @Put(':id')
-  updateUser(@Param('id') id: string, @Body() userChanges: User) {
+  updateUser(@Param('id') id: string, @Body() userChanges: UpdateUserDto) {
     console.log('.:: UserID Update:', id);
     console.log('.:: userChanges: ', userChanges);
 
@@ -139,14 +140,6 @@ export class UsersController {
     }
 
     const existingUser = this.users[position];
-    console.log('.:: existingUser: ', existingUser);
-
-    // Evaluar si el correo tiene el formato válido antes de actualizarlo
-    const email = userChanges.email;
-    if (email && !email.includes('@')) {
-      throw new UnprocessableEntityException(`El correo electrónico ${email} no tiene un formato válido`);
-    }
-
     const updatedUser = { ...existingUser, ...userChanges };
     this.users[position] = updatedUser;
 
