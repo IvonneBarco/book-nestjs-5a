@@ -62,9 +62,7 @@ export class UsersService {
   }
 
   findById(id: string) {
-    console.log('.:: UserID:', id);
     const data = this.users.find((user) => user.id === id);
-    console.log('.:: data: ', data);
     if (data === undefined) {
       // Código para simular un error de usuario no encontrado
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
@@ -95,14 +93,7 @@ export class UsersService {
   }
 
   update(id: string, userChanges: UpdateUserDto) {
-    console.log('.:: UserID Update:', id);
-    console.log('.:: userChanges: ', userChanges);
-
-    const position = this.users.findIndex((user) => user.id === id);
-    if (position === -1) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
-    }
-
+    const position = this.findOne(id);
     const existingUser = this.users[position];
     const updatedUser = { ...existingUser, ...userChanges };
     this.users[position] = updatedUser;
@@ -114,17 +105,19 @@ export class UsersService {
   }
 
   delete(id: string) {
-    console.log('.:: UserID:', id);
-    const position = this.users.findIndex((user) => user.id === id);
-    console.log('.:: position: ', position);
-    if (position === -1) {
-      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
-    }
-
+    const position = this.findOne(id);
     this.users.splice(position, 1);
 
     return {
       message: 'Usuario eliminado con éxito',
     };
+  }
+
+  findOne(id: string) {
+    const position = this.users.findIndex((user) => user.id === id);
+    if (position === -1) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+    return position;
   }
 }
