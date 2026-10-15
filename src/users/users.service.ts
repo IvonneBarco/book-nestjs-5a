@@ -80,16 +80,17 @@ export class UsersService {
   }
 
   create(userPayload: CreateUserDto) {
-    const newUser = {
-      ...userPayload,
-      id: `${new Date().getTime()}`,
-      nickname: userPayload.name.substring(0, 3) + Math.floor(Math.random() * 1000),
-    };
-    this.users.push(newUser);
+    // const newUser = {
+    //   ...userPayload,
+    //   id: `${new Date().getTime()}`,
+    //   nickname: userPayload.name.substring(0, 3) + Math.floor(Math.random() * 1000),
+    // };
+    // this.users.push(newUser);
 
-    return {
-      data: newUser,
-    };
+    // return {
+    //   data: newUser,
+    // };
+    return;
   }
 
   update(id: string, userChanges: UpdateUserDto) {
