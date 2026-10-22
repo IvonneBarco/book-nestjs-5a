@@ -1,75 +1,31 @@
 import { ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
-import { User } from './user.model';
+import { IUser } from './user.model';
 import { CreateUserDto, UpdateUserDto } from './user.dto';
+import { InjectRepository } from '@nestjs/typeorm';
+import { User } from './entities/user.entity';
+import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  private users: User[] = [
-    {
-      id: '1',
-      name: 'Maria',
-      email: 'maria@correo.com',
-    },
-    {
-      id: '2',
-      name: 'Carlos',
-      email: 'carlos@correo.com',
-    },
-    {
-      id: '3',
-      name: 'Ana',
-      email: 'ana@correo.com',
-    },
-    {
-      id: '4',
-      name: 'Luis',
-      email: 'luis@correo.com',
-    },
-    {
-      id: '5',
-      name: 'Sofia',
-      email: 'sofia@correo.com',
-    },
-    {
-      id: '6',
-      name: 'Mateo',
-      email: 'mateo@correo.com',
-    },
-    {
-      id: '7',
-      name: 'Lucia',
-      email: 'lucia@correo.com',
-    },
-    {
-      id: '8',
-      name: 'Diego',
-      email: 'diego@correo.com',
-    },
-    {
-      id: '9',
-      name: 'Elena',
-      email: 'elena@correo.com',
-    },
-    {
-      id: '10',
-      name: 'Javier',
-      email: 'javier@correo.com',
-    },
-  ];
+  constructor(@InjectRepository(User) private userRepository: Repository<IUser>) {}
 
-  findAll() {
-    return this.users;
+  async findAll() {
+    const users = await this.userRepository.find();
+    return {
+      message: 'Usuarios encontrados',
+      data: users,
+    };
   }
 
-  findById(id: string) {
-    const data = this.users.find((user) => user.id === id);
+  async findById(id: number) {
+    const data = await this.findOne(id);
     if (data === undefined) {
       // Código para simular un error de usuario no encontrado
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
 
     // Código para simular un error de permisos
-    if (data.id === '1') {
+    if (data.id === 1) {
       throw new ForbiddenException(`Usuario con ID ${id} no tiene permisos para acceder a este recurso`);
     }
 
@@ -79,46 +35,48 @@ export class UsersService {
     };
   }
 
-  create(userPayload: CreateUserDto) {
-    // const newUser = {
-    //   ...userPayload,
-    //   id: `${new Date().getTime()}`,
-    //   nickname: userPayload.name.substring(0, 3) + Math.floor(Math.random() * 1000),
-    // };
-    // this.users.push(newUser);
-
-    // return {
-    //   data: newUser,
-    // };
-    return;
+  async create(userPayload: CreateUserDto) {
+    try {
+      const newUser = await this.userRepository.save(userPayload);
+      return {
+        message: 'Usuario creado con éxito',
+        data: newUser,
+      };
+    } catch (error: any) {
+      throw new ForbiddenException(`Error al crear el usuario: ${error.message}`);
+    }
   }
 
-  update(id: string, userChanges: UpdateUserDto) {
-    const position = this.findOne(id);
-    const existingUser = this.users[position];
-    const updatedUser = { ...existingUser, ...userChanges };
-    this.users[position] = updatedUser;
+  async update(id: number, userChanges: UpdateUserDto) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
 
+    const updatedUser = this.userRepository.merge(user, userChanges);
+    await this.userRepository.save(updatedUser);
     return {
       message: 'Usuario actualizado con éxito',
       data: updatedUser,
     };
   }
 
-  delete(id: string) {
-    const position = this.findOne(id);
-    this.users.splice(position, 1);
-
+  async delete(id: number) {
+    const user = await this.findOne(id);
+    if (!user) {
+      throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
+    }
+    await this.userRepository.delete(id);
     return {
       message: 'Usuario eliminado con éxito',
     };
   }
 
-  findOne(id: string) {
-    const position = this.users.findIndex((user) => user.id === id);
-    if (position === -1) {
+  async findOne(id: number) {
+    const user = await this.userRepository.findOneBy({ id });
+    if (!user) {
       throw new NotFoundException(`Usuario con ID ${id} no encontrado`);
     }
-    return position;
+    return user;
   }
 }
