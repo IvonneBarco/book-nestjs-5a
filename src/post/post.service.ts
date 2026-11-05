@@ -1,4 +1,4 @@
-import { BadRequestException, Injectable } from '@nestjs/common';
+import { BadRequestException, ForbiddenException, Injectable, NotFoundException } from '@nestjs/common';
 import { CreatePostDto } from './dto/create-post.dto';
 import { UpdatePostDto } from './dto/update-post.dto';
 import { InjectRepository } from '@nestjs/typeorm';
@@ -13,6 +13,7 @@ export class PostService {
       const newPost = await this.postRepository.save({
         ...body,
         user: { id: body.userId },
+        categories: body.categoryIds?.map((categoryId) => ({ id: categoryId })),
       });
       return {
         message: 'Post creado correctamente',
@@ -24,7 +25,14 @@ export class PostService {
   }
 
   async findAll() {
-    const posts = await this.postRepository.find();
+    const posts = await this.postRepository.find({
+      relations: {
+        user: {
+          profile: true,
+        },
+        categories: true,
+      },
+    });
     return {
       message: 'Posts obtenidos correctamente',
       data: posts,
@@ -32,10 +40,29 @@ export class PostService {
     };
   }
 
+  async findById(id: number) {
+    const data = await this.findOne(id);
+    if (data === undefined) {
+      // Código para simular un error de Post no encontrado
+      throw new NotFoundException(`Post con ID ${id} no encontrado`);
+    }
+
+    return {
+      message: 'Post encontrado',
+      data,
+    };
+  }
+
   async findOne(id: number) {
     const post = await this.postRepository.findOne({
       where: {
         id: id,
+      },
+      relations: {
+        user: {
+          profile: true,
+        },
+        categories: true,
       },
     });
 
