@@ -7,7 +7,7 @@ import { Repository } from 'typeorm';
 
 @Injectable()
 export class UsersService {
-  constructor(@InjectRepository(User) private userRepository: Repository<IUser>) {}
+  constructor(@InjectRepository(User) private userRepository: Repository<User>) {}
 
   async findAll() {
     const users = await this.userRepository.find();

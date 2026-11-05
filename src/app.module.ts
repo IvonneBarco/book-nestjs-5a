@@ -4,6 +4,7 @@ import { UsersModule } from './users/users.module';
 import { TypeOrmModule } from '@nestjs/typeorm';
 import { Env } from './env.model';
 import { config } from 'process';
+import { PostModule } from './post/post.module';
 
 @Module({
   imports: [
@@ -26,6 +27,7 @@ import { config } from 'process';
       inject: [ConfigService],
     }),
     UsersModule,
+    PostModule,
     // other modules can be imported here
   ],
 })
